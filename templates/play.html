@@ -17,9 +17,10 @@
         function call_number(sender, nbr)
         {    
             if( sender.classList.contains("button-selected") ){
-                sender.classList.add('button');
-                sender.classList.remove('button-selected');
-            
+                if( nbr != 0){
+                    sender.classList.add('button');
+                    sender.classList.remove('button-selected');
+                }
             } else {
                 sender.classList.add('button-selected');
                 sender.classList.remove('button');
@@ -35,10 +36,8 @@
                     called = "";
 
                     results.forEach(function(res) {
-                        for( value in res){
-                            called = called.concat(res[value]);
-                            called = called.concat("  ");
-                        }
+                        called = called.concat(res);
+                        called = called.concat("  ");
                     })
                 })
                 document.getElementById('called_numbers').innerText = called;    
@@ -96,10 +95,15 @@
                                     {% for b, i, n, g, o in card %}
                                     <tr>
                                         <td align="center"><button class="button" onclick="call_number(this, {{b}})">{{b}}</button></td>
-                                        <td><button class="button" onclick="call_number(this, {{i}})">{{i}}</button></td>
-                                        <td><button class="button" onclick="call_number(this, {{n}})">{{n}}</button></td>
-                                        <td><button class="button" onclick="call_number(this, {{g}})">{{g}}</button></td>
-                                        <td class="danger"><button class="button" onclick="call_number(this, {{o}})">{{o}}</button></td>
+                                        <td align="center"><button class="button" onclick="call_number(this, {{i}})">{{i}}</button></td>
+                                        {% if n | int == 0 %}
+                                            <td align="center"><button class="button-selected" onclick="call_number(this, {{0}})">{{0}}</button></td>
+                                        {% else %}
+                                            <td align="center"><button class="button" onclick="call_number(this, {{n}})">{{n}}</button></td>
+                                        {% endif %}    
+
+                                        <td align="center"><button class="button" onclick="call_number(this, {{g}})">{{g}}</button></td>
+                                        <td align="center"><button class="button" onclick="call_number(this, {{o}})">{{o}}</button></td>
                                     </tr>
                                     {% endfor %}</td>
                                     
