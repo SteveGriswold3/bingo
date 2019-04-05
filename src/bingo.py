@@ -41,4 +41,6 @@ class Card:
         card = []
         for k in bingo_nbrs.keys():
             card.append(np.random.choice(bingo_nbrs[k],5,replace=False))
-        return np.array(card)
+        card = np.array(card)
+        card[2][2] = 0
+        return card

@@ -11,6 +11,17 @@ def main_page():
     #return app.send_static_file('calls.html')
     return render_template('calls.html')
 
+@app.route('/login')
+def login():
+
+    return app.send_static_file('login.html') 
+
+
+@app.route('/welcome')
+def welcome():
+
+    return render_template('welcome.html')
+
 
 @app.route('/play')
 def play():
