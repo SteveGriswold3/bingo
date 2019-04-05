@@ -1,0 +1,102 @@
+<html>
+    <head>
+        <link href="/static/css/calls.css" rel="stylesheet">
+        <link rel="icon" type="image/gif" href="/static/img/usf-logo-scaled.png" />
+        <title>NSC Unites | Bingo</title>
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+        <!-- Latest compiled JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+
+    </head>
+    <script>
+        function call_number(sender, nbr)
+        {    
+            if( sender.classList.contains("button-selected") ){
+                sender.classList.add('button');
+                sender.classList.remove('button-selected');
+            
+            } else {
+                sender.classList.add('button-selected');
+                sender.classList.remove('button');
+            }
+        }
+        </script>
+    <body>
+        <div class="container">
+            <div class="row">
+
+            </div>
+            <div class="row">
+                <div class="col-sm-2 logo">
+                    <img src="/static/img/USF_LOGO.jpg" margin="100" height="150" width="140"/>
+                </div>
+                <div class="col-sm-1">
+                </div>
+                <div class="col-sm-6 logo">
+                    <div class="media-middle">
+                        <h1>NSC Unites</h1>
+                        <h3>Bingo</h3>
+                        <h2>Spring Into Service</h2>
+                    </div> 
+                </div>
+            </div>
+            <div class="row">
+                <h4>Calls</h4>
+                <div class="col-sm-12">
+                    <h4 id=called_numbers>12 23 47 64 26</h4>
+                </div>
+            </div>
+            <div class="progress">
+                <div class="progress-bar">
+
+                </div>
+            </div>
+            <div class="row">
+                <h4>Bingo Cards</h4>
+                <div class="col-sm-2 card-frame">
+                    
+                    <table class="table-bordered">
+                        <tr>
+                            <td>
+
+                                <table>
+                                    <thead align="center">
+                                        <td><h4>B</h4></td>
+                                        <td><h4>I</h4></td>
+                                        <td><h4>N</h4></td>
+                                        <td><h4>G</h4></td>
+                                        <td><h4>O</h4></td>
+                                    </thead>
+                                    {% for b, i, n, g, o in card %}
+                                    <tr>
+                                        <td align="center"><button class="button" onclick="call_number(this, {{b}})">{{b}}</button></td>
+                                        <td><button class="button" onclick="call_number(this, {{i}})">{{i}}</button></td>
+                                        <td><button class="button" onclick="call_number(this, {{n}})">{{n}}</button></td>
+                                        <td><button class="button" onclick="call_number(this, {{g}})">{{g}}</button></td>
+                                        <td class="danger"><button class="button" onclick="call_number(this, {{o}})">{{o}}</button></td>
+                                    </tr>
+                                    {% endfor %}</td>
+                                    
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </body>
+    <footer class="sticky-footer">
+    <div class="container my-auto">
+        <div class="copyright text-center my-auto">
+        <span>Copyright © US Foods 2019</span>
+        </div>
+    </div>
+    </footer>
+</html>

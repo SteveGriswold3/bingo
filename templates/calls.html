@@ -1,0 +1,83 @@
+
+<html>
+    <head>
+        <link href="/static/css/calls.css" rel="stylesheet">
+    </head>
+    <script>
+    function call_number(sender, nbr)
+    {
+        document.getElementById("called").value = nbr;
+
+        var called = document.getElementById('Calls').innerText;
+        var res = called.split(" ");
+
+        if( sender.classList.contains("button-selected") ){
+            sender.classList.add('button');
+            sender.classList.remove('button-selected');
+        
+            for( value in res){
+                if(res[value]==nbr){ 
+                    res.splice( value, 1);
+                }
+            }
+        } else {
+            sender.classList.add('button-selected');
+            sender.classList.remove('button');
+            res.push(nbr);    
+        }
+
+        called = "";
+        for( value in res){
+            called = called.concat(res[value]);
+            called = called.concat("  ");
+        }
+        document.getElementById('Calls').innerText = called;
+        
+
+    }
+    </script>
+    <body>
+
+    <form method="POST">
+        <input type="text" id="called"/>
+        <input type="submit" text="Enter"/>
+    </form>
+    <div>
+        <div>Numbers:</div>
+        <div id="Calls"></div>
+    </div>
+    <table>
+        <tr>
+            <td>B</td>
+            {% for x in range(1,16) %}
+            <td><button class="button" onclick="call_number(this, {{x}})">{{x}}</button></td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>I</td>
+            {% for x in range(16,31) %}
+            <td><button class="button" onclick="call_number(this, {{x}})">{{x}}</button></td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>N</td>
+            {% for x in range(31,46) %}
+            <td><button class="button" onclick="call_number(this, {{x}})">{{x}}</button></td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>G</td>
+            {% for x in range(46,61) %}
+            <td><button class="button" onclick="call_number(this, {{x}})">{{x}}</button></td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>O</td>
+            {% for x in range(61,76) %}
+            <td><button class="button" onclick="call_number(this, {{x}})">{{x}}</button></td>
+            {% endfor %}
+        </tr>
+    </table>
+</body>
+
+</html>
