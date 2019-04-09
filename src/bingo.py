@@ -1,6 +1,9 @@
 """Package to Run Virtual Bingo at US Foods."""
 
 import numpy as np
+from datetime import datetime
+from pymongo import MongoClient
+from string import ascii_lowercase as letters
 
 def bingo_range(start):
     return [x for x in range(start,start+15)]
@@ -44,3 +47,42 @@ class Card:
         card = np.array(card)
         card[2][2] = 0
         return card
+
+class bingoDB:
+    def __init__(self):
+        self.con  = MongoClient()
+        self.db = self.con['bingo']
+        self.players = self.db.players
+    
+    def generateCardCode(self, times=100, code_len=6):
+        code_list = []
+        for t in range(0, times):
+            code = ""
+            for n in range(0,code_len):
+                nl = np.random.randint(0,2)
+                if nl==0:
+                #number
+                    num = np.random.randint(0,10)
+                    code+=str(num)
+                elif nl==1:
+                    let = np.random.randint(0,26)
+                    code+=letters[let]
+            code_list.append(code)
+        return code_list
+
+    def validate_user(self, user_id, secret_key):
+        res = self.players.find_one({'user_id': user_id, 'secret_key': secret_key})
+        if res==None:
+            res = self.players.find_one({'user_id': user_id})
+            if res==None:
+                print('Player Not Registered.')
+                return 'id'
+            else:
+                print('Incorrect Secret Key.')
+                return 'key'
+        else:
+            keys = self.generateCardCode(1, 32)
+            self.players.update_one(
+                {'user_id': user_id, 'secret_key': secret_key},
+                {'$set': {'temp_key': keys[0], 'start_time': datetime.now()}})
+            return keys[0]  
