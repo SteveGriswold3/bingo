@@ -1,7 +1,8 @@
 from flask import Flask, request, render_template, url_for
-from src.bingo import Card 
+from src.bingo import Card, bingoDB
 import json
 
+db = bingoDB()
 app = Flask(__name__)
 
 calls = [5,10,6]
@@ -15,6 +16,12 @@ def main_page():
 def login():
 
     return app.send_static_file('login.html') 
+
+
+@app.route('/<id>/<key>/check_user.json')
+def valid_user(id, key):
+    ret = db.validate_user(id, key)
+    return json.dumps({'response': ret})
 
 
 @app.route('/welcome')
