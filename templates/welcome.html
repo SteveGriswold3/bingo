@@ -17,6 +17,69 @@
         setInterval(function() {
             /// code here
         }, 1 * 1000); // 1 * 1000 milsec
+
+        function update_nickname(sender) {
+            var new_name = document.getElementById('playerName').value
+            var key = document.getElementById('temp_key').value
+            if (new_name=="") {
+                document.getElementById('name_error').innerText = "Must Enter Nickname to Update.";    
+            } else {
+                jqry='/'.concat(key)
+                jqry=jqry.concat('/')
+                jqry=jqry.concat(new_name)
+                jqry=jqry.concat('/update_nickname.json')
+
+                var jsonData = $.ajax({
+                    url: jqry,
+                    dataType: 'json',
+                    }).done(function (results) {
+                        if (results.response=='successful') {
+                            sender.classList.add('btn-success');
+                            sender.classList.remove('btn-info');
+                            document.getElementById('name_error').innerText = "";    
+                        } else {
+                            sender.classList.add('btn-danger');
+                            sender.classList.remove('btn-info');
+                            document.getElementById('name_error').innerText = "Could not save Name.";    
+                        }
+                    })    
+            }                  
+        }
+
+        function add_card_code(sender) {
+            var new_code = document.getElementById('cardCode').value
+            var key = document.getElementById('temp_key').value
+            if (new_code=="") {
+                document.getElementById('code_error').innerText = "Must Enter Code.";    
+            } else {
+                jqry='/'.concat(key)
+                jqry=jqry.concat('/')
+                jqry=jqry.concat(new_code)
+                jqry=jqry.concat('/add_card_code.json')
+
+                var jsonData = $.ajax({
+                    url: jqry,
+                    dataType: 'json',
+                    }).done(function (results) {
+                        if (results.response=='successful') {
+                            sender.classList.add('btn-success');
+                            sender.classList.remove('btn-info');
+                            document.getElementById('code_error').innerText = "";
+
+                            var table_cards = document.getElementById('tblCards');
+                            row = table_cards.insertRow(table_cards.rows.length);
+                            row.insertCell(0).innerHTML = '<input type="checkbox"/>';
+                            row.insertCell(1).innerText = new_code;
+                            row.insertCell(2).innerText = results.card_count;
+                            row.insertCell(3).innerText = 'Available';
+                        } else {
+                            sender.classList.add('btn-danger');
+                            sender.classList.remove('btn-info');
+                            document.getElementById('code_error').innerText = results.response;    
+                        }
+                    })    
+            }                  
+        }
     </script>
 
     <body>
@@ -44,17 +107,23 @@
             <!-- Player Settings-->
             <h4>Player Options:</h4>
             <div class="row">
+                <form action="/update_nickname" method='POST' id='player'>
+                    <input type="hidden" id='temp_key' value='{{temp_key}}'/>
+                    <input type="hidden" value='{{player_cards}}'/>
+                </form >
+                
                 <div class="col-sm-2 center"></div>
                 <div class="col-sm-2 center">
                     <h5>Player Name:</h5> 
                 </div>
                 <div class="col-sm-4 center">
-                    <input type="text" id="playerName"/>
+                    <input type="text" id="playerName" value='{{player_name}}'/>
                 </div>
                 <div class="col-sm-1"></div>
                 <div class="col-sm-1">
-                    <a class="btn btn-primary" href="/update_player_info">Update</a>
+                    <a class="btn btn-info" id="Save" onclick="update_nickname(this)">Save</a>
                 </div>
+                <div id='name_error'></div>
             </div>
             <div class="row"><hr></div>
             <!-- Add Cards -->
@@ -69,8 +138,9 @@
                 </div>
                 <div class="col-sm-1"></div>
                 <div class="col-sm-1">
-                    <a class="btn btn-primary" href="/add_card">Add Card</a>
+                    <a class="btn btn-primary" onclick="add_card_code(this)">Add Card</a>
                 </div>
+                <div id='code_error'></div>
             </div>
             <div class="row"><hr></div>
 
@@ -88,26 +158,21 @@
             <div class="row">
                 <div class="col-sm-1"></div>
                 <div class="col-sm-6">
-                    <table class="table">
+                    <table class="table" id="tblCards">
                         <thead>
                             <td>Select</td>
                             <td>Code</td>
                             <td>Card Number</td>
                             <td>Status</td>
                         </thead>
+                        {% for player_card in player_cards %}
                         <tr>
                             <td><input type="checkbox"/></td>
-                            <td>EBQ576</td>
-                            <td>1</td>
-                            <td>Available</td>                        
+                            <td>{{player_card.card_code}}</td>
+                            <td>{{player_card.nbr}}</td>
+                            <td>{% if player_card.used == True %} Available {% else %} Used {% endif %}</td>                        
                         </tr>
-                        <tr>
-                            <td><input type="checkbox"/></td>
-                            <td>EB5UP6</td>
-                            <td>2</td>
-                            <td>Available</td>                        
-                        </tr>
-                        
+                        {% endfor %}                        
                     </table>
                 </div>
             </div>
