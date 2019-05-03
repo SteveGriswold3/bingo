@@ -36,7 +36,11 @@
                             document.getElementById('user_error').innerText = "";
                             document.getElementById('key_error').innerText = "Invalid Secret Key.";    
                         } else {
-                            window.location.href = '/welcome';
+                            welcome_url='/'.concat(user)
+                            welcome_url=welcome_url.concat('/')
+                            welcome_url=welcome_url.concat(key)
+                            welcome_url=welcome_url.concat('/welcome')
+                            window.location.href = welcome_url;
                         }
                     })    
             }                  
@@ -72,7 +76,7 @@
             <div class="row">
                 <div class="col-sm-2 center"></div>
                 <div class="col-sm-2 center">
-                    <h5>User E-mail:</h5> 
+                    <h5>User ID:</h5> 
                 </div>
                 <div class="col-sm-3 center">
                     <input type="text" id="userid" width="300"/>
