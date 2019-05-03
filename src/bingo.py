@@ -6,9 +6,17 @@ from pymongo import MongoClient
 from string import ascii_lowercase as letters
 
 def bingo_range(start):
+    """Create bingo range for each starting point.
+
+    :return: list of range of 15 number in a sequence.
+    """
     return [x for x in range(start,start+15)]
 
 def bingo_numbers():
+    """Initialize the Numbers Available in Bingo.
+    
+    :return: dictionary of bingo letters with possible numbers.
+    """
     bingo_nbrs = {}
     start = 1
     bingo_nbrs['b'] = bingo_range(start)
@@ -26,8 +34,19 @@ bingo_nbrs = bingo_numbers()
 
 class Bingo:
     def __init__(self):
-        self.game_number = 0
+        self._game_number = 0
         self.selected_numbers = []
+    
+    @property
+    def game_number(self):
+        return self._game_number
+
+    @game_number.setter
+    def game_number(self, value):
+        if self._game_number <= value:
+            self._game_number = value
+        else:
+            raise ValueError("game_number can not go backwards.")
         
     def picked_number(self, new_number):
         self.selected_numbers.append(new_number)
@@ -50,9 +69,11 @@ class Card:
 
 class bingoDB:
     def __init__(self):
-        self.con  = MongoClient()
+        #self.con  = MongoClient("mongodb://localhost:27017/")
+        self.con = MongoClient()
         self.db = self.con['bingo']
         self.players = self.db.players
+        self.cards = self.db.card_ids
     
     def generateCardCode(self, times=100, code_len=6):
         code_list = []
@@ -85,4 +106,96 @@ class bingoDB:
             self.players.update_one(
                 {'user_id': user_id, 'secret_key': secret_key},
                 {'$set': {'temp_key': keys[0], 'start_time': datetime.now()}})
-            return keys[0]  
+            return keys[0]
+    
+    def getStamp(self, temp_key):
+        res =self.players.find_one({'temp_key': temp_key})
+        if res!=None:
+            time = res['start_time']
+            time_diff = datetime.now() - time
+            if (time_diff.total_seconds()/60/60) > 2:
+                print("time out")
+                return False
+            else:
+                return True
+
+    def welcome(self, user_id, secret_key):
+        res = self.players.find_one(
+            {'user_id': user_id, 'secret_key': secret_key},
+            {'user_id': True,
+            'temp_key': True,
+            'nickname': True}
+            )
+        return res
+
+    def setnickname(self, temp_key, nickname):
+        if self.getStamp(temp_key):
+            self.players.update_one(
+                {'temp_key': temp_key},
+                {'$set': {'nickname': nickname}})
+            print('Updated nickname:', nickname)
+        else:
+            print('Inactive: Login Again')
+
+    def add_card_code(self, temp_key, new_code):
+        """
+        TODO: link to generated card codes.
+        """
+        try:
+            user_id = self.get_user_id(temp_key)
+            ret = self.db.card_ids.find_one({'card_code': new_code})
+            if ret == None:
+                # Card code not found log attempt
+                self.db.card_error.insert_one(
+                    {'time_stamp': datetime.now(),
+                    'user_id': user_id,
+                    'issue': 'User Entered Incorrect Code',
+                    'wrong_code': new_code
+                    }
+                )
+                return 'Code Not Found'
+            else:
+                # Card Code Found
+                if ret['used']==True:
+                    # log already used code
+                    if ret['user_id']==user_id:
+                        return 'You have Already Added This Code'
+                    else:
+                        self.db.card_error.insert_one(
+                            {'time_stamp': datetime.now(),
+                            'user_id': user_id,
+                            'issue': 'Another Player has code',
+                            'other_id': ret['user_id']
+                            }
+                        )
+                        return 'Code Used by Another Player'
+                else:
+                    # Success
+                    card_count = self.cards.count_documents({'user_id': user_id})
+                    card_count+=1
+                    self.db.card_ids.update_one(
+                        {'card_code': new_code},
+                        {'$set': {'used': True, 'user_id': user_id, 'nbr': card_count}}
+                        )
+                    return 'successful', card_count
+        except:
+            return 'Code could not be added.  Try again later.'
+
+    def get_card_codes(self, user_id):
+        ret = self.db.card_ids.find({'user_id': user_id}, {'_id': False})
+        player_cards = [card for card in ret]
+        return player_cards
+
+    def getTempKey(self, user_id, secret_key):
+        res = self.players.find_one(
+            {'user_id': user_id, 'secret_key': secret_key},
+            {'temp_key': True}
+            )
+        return res['temp_key']
+
+    def get_user_id(self, temp_key):
+        res = self.players.find_one(
+            {'temp_key': temp_key},
+            {'user_id': True}
+        )
+        return res['user_id']
