@@ -227,3 +227,5 @@ class bingoDB:
     def reset_winning_patterns(self):
         self.winner_patterns = get_winning_patterns()
     
+    def clear_winning_patterns(self):
+        self.winner_patterns = []
