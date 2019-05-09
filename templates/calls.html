@@ -30,7 +30,7 @@
                 url: jqry,
                 dataType: 'json',
                 }).done(function (results) {
-                    alert(results)
+                    console.log(results);
                 });
 
             for( value in res ){
@@ -48,7 +48,7 @@
                 url: jqry,
                 dataType: 'json',
                 }).done(function (results) {
-                    alert(results);
+                    console.log(results);
                 });
 
             res.push(nbr);    
@@ -75,39 +75,13 @@
 
     // range variable
     var range = function(start, end) {
-                        var range = [];
-                        var n = start;
-                        while (n < end ) {
-                            range.push(n)
-                            n=n+1;
-                        }
-                        return range;
-                    }
-
-    function reset_calls() {
-        var jsonData = $.ajax({
-            url: '/reset_calls.json',
-            dataType: 'json',
-            }).done(function (results) {
-                if (results.reset == 'successful') {
-                    document.getElementById('Calls').innerText = "";
-                    // reset buttons
-                    
-                    numbers = range(1,76);
-                    for (x in numbers) {
-                        var call_btn = document.getElementById('btn'.concat(numbers[x]));
-                        if( call_btn.classList.contains("button-selected") ){
-                            call_btn.classList.add('button');
-                            call_btn.classList.remove('button-selected');
-                        }
-                    }
-                    // update game number
-                    var game_nbr = document.getElementById('game_nbr');
-                    var n = parseInt(game_nbr.innerText);
-                    n = n+1;
-                    game_nbr.innerText = n;
-                }
-            });
+        var range = [];
+        var n = start;
+        while (n < end ) {
+            range.push(n)
+            n=n+1;
+        }
+        return range;
     }
 
     function save_pattern() {
@@ -125,10 +99,8 @@
             }
             win_chk[r] = (row_chk);
         }
-        alert(win_chk);
-        /*--var patten_input = document.getElementById('new_pattern');
-        patten_input.value = win_chk;
-        document.getElementById('add_pattern').submit();--*/
+
+        /*--add_pattern--*/
         $.ajax({
             type: "POST",
             url: "/add_pattern",
@@ -148,18 +120,131 @@
             }
         });
     }
-    setInterval(function() {
-        /*-- Get Called Bingos --*/
-        /*--var jsonData = $.ajax({
+
+    function remove_prior_numbers(bingo_table){
+        while (bingo_table.rows.length>1){
+            bingo_table.deleteRow(1);
+        }
+    }
+
+    function see_winning_card_numbers(sender) {
+        // Get the called Numbers
+        var called = [];
+        $.ajax({
             url: '/calls.json',
             dataType: 'json',
             }).done(function (results) {
+                called = results;
+            })
 
-            });--*/
+        var key = sender.id;
+        var code = sender.innerText;
+        var bingo_table =  document.getElementById("generated_card_numbers");
+        remove_prior_numbers(bingo_table)
+        
+        $('#addModal').modal('show');
+        document.getElementById('randomize_card_id').value=code;
+
+        jqry='/'.concat(key);
+        jqry=jqry.concat('/');
+        jqry=jqry.concat(code);
+        jqry=jqry.concat('/get_numbers.json');
+
+        var jsonData = $.ajax({
+            url: jqry,
+            dataType: 'json',
+            }).done(function (results) {
+                
+                var cell_count = 0;
+                var row = bingo_table.insertRow(bingo_table.rows.length);
+                var nbr_button = "";
+                for (i in results.card){
+                    for (bingo_nbr in results.card[i]){
+                        nbr_button = '<button class="';
+                        if (called.includes(results.card[i][bingo_nbr].toString())) {
+                            nbr_button = nbr_button.concat("button-selected");
+                        } else {
+                            nbr_button = nbr_button.concat("button");
+                        }
+                        nbr_button = nbr_button.concat('">');
+                        nbr_button = nbr_button.concat(results.card[i][bingo_nbr]);
+                        nbr_button = nbr_button.concat("</button>");
+
+                        row.insertCell(cell_count).innerHTML = nbr_button;
+                        cell_count = cell_count+1;
+                        if (cell_count==5){
+                            cell_count = 0;
+                            row = bingo_table.insertRow(bingo_table.rows.length);
+                        }
+                    }
+
+                }
+            });
+    }
+    
+    var bingo_shouts = []
+    setInterval(function() {
+        var win_table = document.getElementById('winners_table')
+
+        /*-- Get Called Bingos --*/
+        var jsonData = $.ajax({
+            url: '/bingos.json',
+            dataType: 'json',
+            }).done(function (results) {
+                results.forEach(function(res) {
+                    if (bingo_shouts.includes(res.card_id)) {
+                    } else {
+                        row = win_table.insertRow(win_table.rows.length)
+                        row.insertCell(0).innerText = res.nickname;
+                        
+                        var card_link = '<a id="'.concat(res.temp_key);
+                        card_link = card_link.concat('" onclick="see_winning_card_numbers(this)">');
+                        card_link = card_link.concat(res.card_id);
+                        card_link = card_link.concat('</a>');
+                        row.insertCell(1).innerHTML = card_link;
+                        
+                        bingo_shouts.push(res.card_id);
+                    }
+                })
+            });
         }
 
         , 1 * 1000); // 1 * 1000 milsec
 
+        function reset_calls() {
+            // remove bingo past winners
+            while (bingo_shouts.length>0) {
+                bingo_shouts.pop();
+            }
+            var win_tbl = document.getElementById('winners_table');
+            while (win_tbl.rows.length>1){
+                win_tbl.deleteRow(1);
+            } 
+
+            var jsonData = $.ajax({
+                url: '/reset_calls.json',
+                dataType: 'json',
+                }).done(function (results) {
+                    if (results.reset == 'successful') {
+                        document.getElementById('Calls').innerText = "";
+                        // reset buttons
+                        
+                        numbers = range(1,76);
+                        for (x in numbers) {
+                            var call_btn = document.getElementById('btn'.concat(numbers[x]));
+                            if( call_btn.classList.contains("button-selected") ){
+                                call_btn.classList.add('button');
+                                call_btn.classList.remove('button-selected');
+                            }
+                        }
+                        // update game number
+                        var game_nbr = document.getElementById('game_nbr');
+                        var n = parseInt(game_nbr.innerText);
+                        n = n+1;
+                        game_nbr.innerText = n;
+                    }
+                });
+            }   
     </script>
     <body>
         <div class="container">
@@ -219,6 +304,18 @@
                 </div>
             </div>
 
+            <!--Winners-->
+            <div class="row">
+                <div class="col-md-12">
+                    <h3>Game Winner(s)</h3>
+                    <table class="table" id='winners_table'>
+                        <thead>
+                            <td>Nickname</td>
+                            <td>Card</td>
+                        </thead>
+                    </table>
+                </div>
+            </div>
             <!--Table to Game Controls-->
             <div class="row">
                 <div class="col-md-6">
@@ -281,6 +378,41 @@
                     </div>
                 </div>
 
+            </div>
+        </div>
+
+        <!-- Show Winning Card -->
+        <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Winning Card?</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <input type="hidden" id="randomize_card_id"/>
+                <div class="modal-body">
+                    <table class="table-bordered">
+                        <tr>
+                            <td>
+                                <table id="generated_card_numbers">
+                                    <thead align="center">
+                                        <td><h4>B</h4></td>
+                                        <td><h4>I</h4></td>
+                                        <td><h4>N</h4></td>
+                                        <td><h4>G</h4></td>
+                                        <td><h4>O</h4></td>
+                                    </thead>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-primary" data-dismiss="modal">Okay</a>
+                </div>
+                </div>
             </div>
         </div>
     </body>

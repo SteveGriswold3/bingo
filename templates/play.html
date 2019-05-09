@@ -27,6 +27,19 @@
             }
         }
 
+        function call_bingo() {
+            var temp_key = document.getElementById('temp_key').value
+            $.ajax({
+                type: 'POST',
+                url: '/shout_bingo',
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify(temp_key),
+                success: function(response){
+                    console.log(response);
+                }
+            });
+        }
+
         setInterval(function() {
             var jsonData = $.ajax({
                 url: '/calls.json',
@@ -70,8 +83,11 @@
                     <h4 id="called_numbers"></h4>
                 </div>
             </div>
+            <form>
+                <input type="hidden" name='temp_key' id='temp_key' value='{{temp_key}}'/>
+            </form>
             <div class="row">
-                <button class="btn btn-danger" type="button" data-dismiss="modal">Call Bingo</button>
+                <button class="btn btn-danger" onclick='call_bingo()'>Call Bingo</button>
             </div>
             <div class="row">
                 <h4>Bingo Cards</h4>
