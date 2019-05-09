@@ -17,6 +17,193 @@
         setInterval(function() {
             /// code here
         }, 1 * 1000); // 1 * 1000 milsec
+
+        function update_nickname(sender) {
+            var new_name = document.getElementById('playerName').value
+            var key = document.getElementById('temp_key').value
+            if (new_name=="") {
+                document.getElementById('name_error').innerText = "Must Enter Nickname to Update.";    
+            } else {
+                jqry='/'.concat(key)
+                jqry=jqry.concat('/')
+                jqry=jqry.concat(new_name)
+                jqry=jqry.concat('/update_nickname.json')
+
+                var jsonData = $.ajax({
+                    url: jqry,
+                    dataType: 'json',
+                    }).done(function (results) {
+                        if (results.response=='successful') {
+                            sender.classList.add('btn-success');
+                            sender.classList.remove('btn-info');
+                            document.getElementById('name_error').innerText = "";    
+                        } else {
+                            sender.classList.add('btn-danger');
+                            sender.classList.remove('btn-info');
+                            document.getElementById('name_error').innerText = "Could not save Name.";    
+                        }
+                    })    
+            }                  
+        }
+
+        function add_card_code(sender) {
+            var new_code = document.getElementById('cardCode').value
+            var key = document.getElementById('temp_key').value
+            if (new_code=="") {
+                document.getElementById('code_error').innerText = "Must Enter Code.";    
+            } else {
+                jqry='/'.concat(key)
+                jqry=jqry.concat('/')
+                jqry=jqry.concat(new_code)
+                jqry=jqry.concat('/add_card_code.json')
+
+                var jsonData = $.ajax({
+                    url: jqry,
+                    dataType: 'json',
+                    }).done(function (results) {
+                        if (results.response=='successful') {
+                            sender.classList.add('btn-success');
+                            sender.classList.remove('btn-info');
+                            document.getElementById('code_error').innerText = "";
+
+                            var table_cards = document.getElementById('tblCards');
+                            row = table_cards.insertRow(table_cards.rows.length);
+                            row.insertCell(0).innerHTML = '<input type="checkbox"/>';
+
+                            var code_link = '<a onclick="change_card_numbers(this)">'.concat(new_code)
+                            code_link = code_link.concat('</a>')
+                            row.insertCell(1).innerHTML = code_link;
+                            row.insertCell(2).innerText = results.card_count;
+                            row.insertCell(3).innerText = 'Available';
+                            $('#addModal').modal('show');
+                            document.getElementById('randomize_card_id').value=new_code;
+                            random_card();
+                        } else {
+                            sender.classList.add('btn-danger');
+                            sender.classList.remove('btn-info');
+                            document.getElementById('code_error').innerText = results.response;    
+                        }
+                    })    
+            }                  
+        }
+
+        function remove_prior_numbers(bingo_table){
+            while (bingo_table.rows.length>1){
+                bingo_table.deleteRow(1);
+            }
+        }
+
+        function random_card(){
+            var key = document.getElementById('temp_key').value
+            var code = document.getElementById('randomize_card_id').value;
+
+            var bingo_table =  document.getElementById("generated_card_numbers");
+            remove_prior_numbers(bingo_table)
+
+            jqry='/'.concat(key)
+                jqry=jqry.concat('/')
+                jqry=jqry.concat(code)
+                jqry=jqry.concat('/random_card.json')
+
+            var jsonData = $.ajax({
+                url: jqry,
+                dataType: 'json',
+                }).done(function (results) {
+                    
+                    var cell_count = 0;
+                    var row = bingo_table.insertRow(bingo_table.rows.length);
+                    var nbr_button = "";
+
+                    for (i in results.card){
+                        for (bingo_nbr in results.card[i]){
+                            nbr_button = "<button class='button'>".concat(results.card[i][bingo_nbr]);
+                            nbr_button = nbr_button.concat("</button>");
+
+                            row.insertCell(cell_count).innerHTML = nbr_button
+                            cell_count = cell_count+1;
+                            if (cell_count==5){
+                                cell_count = 0;
+                                row = bingo_table.insertRow(bingo_table.rows.length);
+                            }
+                        }
+
+                    }
+                });
+        }
+
+        function change_card_numbers(sender) {
+            var key = document.getElementById('temp_key').value
+            var code = sender.innerText;
+            var bingo_table =  document.getElementById("generated_card_numbers");
+            remove_prior_numbers(bingo_table)
+            
+            $('#addModal').modal('show');
+            document.getElementById('randomize_card_id').value=code;
+
+            jqry='/'.concat(key);
+            jqry=jqry.concat('/');
+            jqry=jqry.concat(code);
+            jqry=jqry.concat('/get_numbers.json');
+
+            var jsonData = $.ajax({
+                url: jqry,
+                dataType: 'json',
+                }).done(function (results) {
+                    
+                    var cell_count = 0;
+                    var row = bingo_table.insertRow(bingo_table.rows.length);
+                    var nbr_button = "";
+
+                    for (i in results.card){
+                        for (bingo_nbr in results.card[i]){
+                            nbr_button = "<button class='button'>".concat(results.card[i][bingo_nbr]);
+                            nbr_button = nbr_button.concat("</button>");
+
+                            row.insertCell(cell_count).innerHTML = nbr_button
+                            cell_count = cell_count+1;
+                            if (cell_count==5){
+                                cell_count = 0;
+                                row = bingo_table.insertRow(bingo_table.rows.length);
+                            }
+                        }
+
+                    }
+                });
+        }
+        var play_codes =[];
+
+        function update_play_list(sender, card_id){
+            if (play_codes.includes(card_id)) {
+                play_codes.pop(card_id);
+                sender.checked=false;
+            }
+            else {
+                play_codes.push(card_id);
+                sender.checked=true;
+            }
+            alert(sender.checked)
+        }
+
+        function play_bingo(){
+            var table_cards = document.getElementById('tblCards');
+            var n = 1;
+            while (n < table_cards.rows.length){
+                var chk_id = 'selected'.concat(n);
+                if (document.getElementById(chk_id).checked){
+                    var code_row = 'code_id'.concat(n);
+                    var card_id = document.getElementById(code_row).innerText
+                    if (!play_codes.includes(card_id)) {
+                        play_codes.push(card_id)
+                    }
+                }
+                n+=1;
+            }
+            var frm = document.getElementById('play_list');
+            var contents = document.getElementById('play_list_values');
+            contents.value = play_codes;
+            frm.submit();
+        }
+
     </script>
 
     <body>
@@ -43,18 +230,19 @@
             <div class="row"><hr></div>
             <!-- Player Settings-->
             <h4>Player Options:</h4>
-            <div class="row">
+            <div class="row">                
                 <div class="col-sm-2 center"></div>
                 <div class="col-sm-2 center">
                     <h5>Player Name:</h5> 
                 </div>
                 <div class="col-sm-4 center">
-                    <input type="text" id="playerName"/>
+                    <input type="text" id="playerName" value='{{player_name}}'/>
                 </div>
                 <div class="col-sm-1"></div>
                 <div class="col-sm-1">
-                    <a class="btn btn-primary" href="/update_player_info">Update</a>
+                    <a class="btn btn-info" id="Save" onclick="update_nickname(this)">Save</a>
                 </div>
+                <div id='name_error'></div>
             </div>
             <div class="row"><hr></div>
             <!-- Add Cards -->
@@ -69,8 +257,9 @@
                 </div>
                 <div class="col-sm-1"></div>
                 <div class="col-sm-1">
-                    <a class="btn btn-primary" href="/add_card">Add Card</a>
+                    <a class="btn btn-primary" onclick="add_card_code(this)">Add Card</a>
                 </div>
+                <div id='code_error'></div>
             </div>
             <div class="row"><hr></div>
 
@@ -78,40 +267,78 @@
             <h4>Your Bingo Cards</h4>
             <div class="row">
                 <div class="col-sm-1"></div>
+                <div class="col-sm-4"></div>
                 <div class="col-sm-4">
-                    Only 4 Cards per Game
-                </div>
-                <div class="col-sm-4">
-                    <a class="btn btn-primary" href="/play">Play Game With Selected Cards.</a>
+                    <a class="btn btn-primary" onclick="play_bingo()">Play Game With Selected Cards.</a>
                 </div>
             </div>
+            <form action="/play" id='play_list' method="POST" >
+                <input type="hidden" name='play_list_values' id='play_list_values'/>
+                <input type="hidden" name='temp_key' id='temp_key' value='{{temp_key}}'/>
+                <input type="hidden" text='{{player_cards}}'/>
+
+            </form>
             <div class="row">
                 <div class="col-sm-1"></div>
                 <div class="col-sm-6">
-                    <table class="table">
+                    <table class="table" id="tblCards">
                         <thead>
                             <td>Select</td>
                             <td>Code</td>
                             <td>Card Number</td>
                             <td>Status</td>
                         </thead>
+                        {% for player_card in player_cards %}
                         <tr>
-                            <td><input type="checkbox"/></td>
-                            <td>EBQ576</td>
-                            <td>1</td>
-                            <td>Available</td>                        
+                            <td><input type="checkbox" id='selected{{player_card.nbr}}' onclick="update_play_list(this, '{{player_card.card_code}}')"/></td>
+                            <td><a id='code_id{{player_card.nbr}}' onclick="change_card_numbers(this)">{{player_card.card_code}}</a></td>
+                            <td>{{player_card.nbr}}</td>
+                            <td>{% if player_card.used == True %} Available {% else %} Used {% endif %}</td>                        
                         </tr>
-                        <tr>
-                            <td><input type="checkbox"/></td>
-                            <td>EB5UP6</td>
-                            <td>2</td>
-                            <td>Available</td>                        
-                        </tr>
-                        
+                        {% endfor %}                        
                     </table>
                 </div>
             </div>
         </div>
+
+        <!--Random Card Modal-->
+        <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Like your Numbers?</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <input type="hidden" id="randomize_card_id"/>
+                <div class="modal-body">
+                    <table class="table-bordered">
+                        <tr>
+                            <td>
+                                <table id="generated_card_numbers">
+                                    <thead align="center">
+                                        <td><h4>B</h4></td>
+                                        <td><h4>I</h4></td>
+                                        <td><h4>N</h4></td>
+                                        <td><h4>G</h4></td>
+                                        <td><h4>O</h4></td>
+                                    </thead>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" onclick="random_card()">Randomize</button>
+                    <a class="btn btn-primary" data-dismiss="modal">Save</a>
+                </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            
+        </script>
     </body>
     <footer class="sticky-footer">
     <div class="container my-auto">
