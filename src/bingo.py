@@ -144,9 +144,6 @@ class bingoDB:
             print('Inactive: Login Again')
 
     def add_card_code(self, temp_key, new_code):
-        """
-        TODO: link to generated card codes.
-        """
         try:
             user_id = self.get_user_id(temp_key)
             #card_code
@@ -229,3 +226,42 @@ class bingoDB:
     
     def clear_winning_patterns(self):
         self.winner_patterns = []
+    
+    def check_patterns(self, temp_key, calls):
+        winner_patterns = self.winner_patterns
+        user_id = self.get_user_id(temp_key)
+        cards = self.get_card_codes(user_id)
+        for card_code in cards:
+            print('temp key:', temp_key)
+            print('card_code:', card_code)
+            player_nbrs = card_code['numbers']['card']
+            print(player_nbrs)
+            print('calls', calls)
+            for pattern in winner_patterns:
+                win_chk = []
+                for i, r in enumerate(pattern):
+                    row_chk = []
+                    print(r)
+                    for j, c in enumerate(r):
+                        if c==1:
+                            print(player_nbrs[i][j])
+                            if str(player_nbrs[i][j]) in calls:
+                                row_chk.append(1)
+                            else:
+                                row_chk.append(0)
+                        else:
+                            row_chk.append(0)
+                    win_chk.append(row_chk)
+                print(win_chk)
+                print(pattern)
+                if win_chk == pattern:
+                    res = self.players.find_one(
+                        {'user_id': user_id, 'temp_key': temp_key},
+                        {'user_id': True,
+                        'nickname': True}
+                        )
+                    return {
+                        'card_id': card_code['card_code'],
+                        'nickname': res['nickname'],
+                        'temp_key': temp_key}
+        return False

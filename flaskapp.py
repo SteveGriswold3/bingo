@@ -1,6 +1,5 @@
 """
 TODO: Login for Calls.
-TODO: Call Bingo.
 """
 from flask import Flask, request, render_template, url_for
 from src.bingo import Card, bingoDB
@@ -10,6 +9,7 @@ db = bingoDB()
 app = Flask(__name__)
 
 calls = []
+bingos = []
 
 @app.route('/')
 def main_page():
@@ -89,7 +89,7 @@ def play():
         print(card_numbers['numbers']['card'])
         cards.append(card_numbers['numbers']['card'])
 
-    return render_template('play.html', cards=cards)
+    return render_template('play.html', cards=cards, temp_key=temp_key)
 
 
 @app.route('/<nbr>/<option>/add_call.json')
@@ -110,6 +110,8 @@ def update_calls():
 def reset_calls():
     while len(calls)>0:
         calls.pop()
+    while len(bingos)>0:
+        bingos.pop()
     db.reset_winning_patterns()
     return json.dumps({'reset': 'successful'})
 
@@ -124,6 +126,20 @@ def add_pattern():
 def clear_patterns():
     db.clear_winning_patterns()
     return 'successful'
+
+@app.route('/shout_bingo', methods=['POST'])
+def shout_bingo():
+    temp_key = request.get_json()
+    winner = db.check_patterns(temp_key, calls)
+    if winner == False:
+        return 'failed'
+    else:
+        bingos.append(winner)
+        return 'successful'
+
+@app.route('/bingos.json')
+def get_bingo_shouts():
+    return json.dumps(bingos)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
