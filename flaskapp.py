@@ -1,3 +1,9 @@
+"""
+TODO: Login for Calls.
+TODO: New Game
+TODO: Winning Patterns
+TODO: Additional Patterns
+"""
 from flask import Flask, request, render_template, url_for
 from src.bingo import Card, bingoDB
 import json
@@ -5,7 +11,7 @@ import json
 db = bingoDB()
 app = Flask(__name__)
 
-calls = [5,10,6]
+calls = []
 
 @app.route('/')
 def main_page():
@@ -57,10 +63,35 @@ def add_card_code(temp_key, new_code):
     
     return json.dumps({'response': ret, 'card_count': card_count})
 
-@app.route('/play')
-def play():
+@app.route('/<temp_key>/<code>/random_card.json')
+def random_card(temp_key, code):
     card = Card()
-    return render_template('play.html', card=card.card_numbers.T)
+    rand_card={}
+    rand_card['card'] = card.card_numbers.T
+    rand_card['card'] = rand_card['card'].tolist()
+    db.save_number(temp_key, code, rand_card)
+    print(rand_card)
+    return json.dumps(rand_card)
+
+@app.route('/<temp_key>/<code>/get_numbers.json')
+def get_number(temp_key, code):
+    card = db.get_numbers(temp_key, code)
+    return json.dumps(card['numbers'])
+
+@app.route('/play', methods=['POST'])
+def play():
+    code_list = request.form['play_list_values']
+    temp_key = request.form['temp_key']
+    
+    code_list = code_list.split(',')
+    print(code_list)
+    cards = []
+    for card in code_list:
+        card_numbers = db.get_numbers(temp_key, card)
+        print(card_numbers['numbers']['card'])
+        cards.append(card_numbers['numbers']['card'])
+
+    return render_template('play.html', cards=cards)
 
 
 @app.route('/<nbr>/<option>/add_call.json')
@@ -77,6 +108,12 @@ def add_calls(nbr, option):
 def update_calls():
   return json.dumps(calls)
 
+@app.route('/reset_calls.json')
+def reset_calls():
+    while len(calls)>0:
+        calls.pop()
+    return json.dumps({'reset': 'successful'})
+    
 if __name__ == '__main__':
-    #app.run(host='0.0.0.0', port=5000, debug=True)
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=5000, debug=True)
+    #app.run(host='0.0.0.0')

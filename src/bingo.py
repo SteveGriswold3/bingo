@@ -143,6 +143,7 @@ class bingoDB:
         """
         try:
             user_id = self.get_user_id(temp_key)
+            #card_code
             ret = self.db.card_ids.find_one({'card_code': new_code})
             if ret == None:
                 # Card code not found log attempt
@@ -153,7 +154,7 @@ class bingoDB:
                     'wrong_code': new_code
                     }
                 )
-                return 'Code Not Found'
+                return 'Code Not Found', 0
             else:
                 # Card Code Found
                 if ret['used']==True:
@@ -168,18 +169,32 @@ class bingoDB:
                             'other_id': ret['user_id']
                             }
                         )
-                        return 'Code Used by Another Player'
+                        return 'Code Used by Another Player', 0
                 else:
                     # Success
                     card_count = self.cards.count_documents({'user_id': user_id})
                     card_count+=1
-                    self.db.card_ids.update_one(
+                    self.cards.update_one(
                         {'card_code': new_code},
                         {'$set': {'used': True, 'user_id': user_id, 'nbr': card_count}}
                         )
                     return 'successful', card_count
         except:
-            return 'Code could not be added.  Try again later.'
+            return 'Code could not be added.  Try again later.', 0
+
+    def save_number(self, temp_key, card_code, numbers):
+        self.cards.update_one(
+            {'card_code': card_code},
+            {'$set': {'numbers': numbers}}
+            )
+
+    def get_numbers(self, temp_key, card_code):
+        user_id = self.get_user_id(temp_key)
+        numbers = self.cards.find_one(
+            {'user_id': user_id, 'card_code': card_code}, 
+            {'_id': False, 'numbers': True}
+            )
+        return numbers
 
     def get_card_codes(self, user_id):
         ret = self.db.card_ids.find({'user_id': user_id}, {'_id': False})

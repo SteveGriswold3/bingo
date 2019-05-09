@@ -72,6 +72,53 @@
             sender.classList.remove('button');
         }
     }
+
+    function reset_calls() {
+        var jsonData = $.ajax({
+            url: '/reset_calls.json',
+            dataType: 'json',
+            }).done(function (results) {
+                if (results.reset == 'successful') {
+                    document.getElementById('Calls').innerText = "";
+                    // reset buttons
+                    var range = function(end) {
+                        var range = [];
+                        var n = 0;
+                        while (n < end ) {
+                            n=n+1;
+                            range.push(n)
+                        }
+                        return range;
+                    }
+                    numbers = range(75);
+                    for (x in numbers) {
+                        var call_btn = document.getElementById('btn'.concat(numbers[x]));
+                        if( call_btn.classList.contains("button-selected") ){
+                            call_btn.classList.add('button');
+                            call_btn.classList.remove('button-selected');
+                        }
+                    }
+                    // update game number
+                    var game_nbr = document.getElementById('game_nbr');
+                    var n = parseInt(game_nbr.innerText);
+                    n = n+1;
+                    game_nbr.innerText = n;
+                }
+            });
+    }
+
+    setInterval(function() {
+        /*-- Get Called Bingos --*/
+        /*--var jsonData = $.ajax({
+            url: '/calls.json',
+            dataType: 'json',
+            }).done(function (results) {
+
+            });--*/
+        }
+
+        , 1 * 1000); // 1 * 1000 milsec
+
     </script>
     <body>
         <div class="container">
@@ -98,32 +145,32 @@
                                 <td>B</td>
                                 {% for x in range(1,16) %}
                                 <td>
-                                    <button class="button" onclick="call_number(this, '{{x}}')">{{x}}</button>
+                                    <button class="button" id="btn{{x}}" onclick="call_number(this, '{{x}}')">{{x}}</button>
                                 </td>
                                 {% endfor %}
                             </tr>
                             <tr>
                                 <td>I</td>
                                 {% for x in range(16,31) %}
-                                <td><button class="button" onclick="call_number(this, '{{x}}')">{{x}}</button></td>
+                                <td><button class="button" id="btn{{x}}" onclick="call_number(this, '{{x}}')">{{x}}</button></td>
                                 {% endfor %}
                             </tr>
                             <tr>
                                 <td>N</td>
                                 {% for x in range(31,46) %}
-                                <td><button class="button" onclick="call_number(this, '{{x}}')">{{x}}</button></td>
+                                <td><button class="button" id="btn{{x}}" onclick="call_number(this, '{{x}}')">{{x}}</button></td>
                                 {% endfor %}
                             </tr>
                             <tr>
                                 <td>G</td>
                                 {% for x in range(46,61) %}
-                                <td><button class="button" onclick="call_number(this, '{{x}}')">{{x}}</button></td>
+                                <td><button class="button" id="btn{{x}}" onclick="call_number(this, '{{x}}')">{{x}}</button></td>
                                 {% endfor %}
                             </tr>
                             <tr>
                                 <td>O</td>
                                 {% for x in range(61,76) %}
-                                <td><button class="button" onclick="call_number(this, '{{x}}')">{{x}}</button></td>
+                                <td><button class="button" id="btn{{x}}" onclick="call_number(this, '{{x}}')">{{x}}</button></td>
                                 {% endfor %}
                             </tr>
                         </tbody>
@@ -145,7 +192,7 @@
                             1
                         </div>
                         <div class="col-md-2">
-                            <button class="button" onclick="">New Game</button>
+                            <button class="button" onclick="reset_calls()">New Game</button>
                         </div>
                     </div>
                 </div>

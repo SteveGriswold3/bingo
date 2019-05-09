@@ -67,11 +67,7 @@
             <div class="row">
                 <h4>Calls</h4>
                 <div class="col-sm-12">
-                    <h4 id="called_numbers">12 23 47 64 26</h4>
-                </div>
-            </div>
-            <div class="progress">
-                <div class="progress-bar">                    
+                    <h4 id="called_numbers"></h4>
                 </div>
             </div>
             <div class="row">
@@ -79,12 +75,11 @@
             </div>
             <div class="row">
                 <h4>Bingo Cards</h4>
-                <div class="col-sm-2 card-frame">
-                    
+                {% for card in cards %}
+                <div class="col-sm-4 card-frame">
                     <table class="table-bordered">
                         <tr>
                             <td>
-
                                 <table>
                                     <thead align="center">
                                         <td><h4>B</h4></td>
@@ -95,25 +90,24 @@
                                     </thead>
                                     {% for b, i, n, g, o in card %}
                                     <tr>
-                                        <td align="center"><button class="button" onclick="call_number(this, {{b}})">{{b}}</button></td>
-                                        <td align="center"><button class="button" onclick="call_number(this, {{i}})">{{i}}</button></td>
+                                        <td align="center"><button class="button" onclick="call_number(this, '{{b}}')">{{b}}</button></td>
+                                        <td align="center"><button class="button" onclick="call_number(this, '{{i}}')">{{i}}</button></td>
                                         {% if n | int == 0 %}
-                                            <td align="center"><button class="button-selected" onclick="call_number(this, {{0}})">{{0}}</button></td>
+                                        <td align="center"><button class="button-selected" onclick="call_number(this, '{{0}}')">FR</button></td>
                                         {% else %}
-                                            <td align="center"><button class="button" onclick="call_number(this, {{n}})">{{n}}</button></td>
+                                        <td align="center"><button class="button" onclick="call_number(this, '{{n}}')">{{n}}</button></td>
                                         {% endif %}    
-
-                                        <td align="center"><button class="button" onclick="call_number(this, {{g}})">{{g}}</button></td>
-                                        <td align="center"><button class="button" onclick="call_number(this, {{o}})">{{o}}</button></td>
+                                        
+                                        <td align="center"><button class="button" onclick="call_number(this, '{{g}}')">{{g}}</button></td>
+                                        <td align="center"><button class="button" onclick="call_number(this, '{{o}}')">{{o}}</button></td>
                                     </tr>
                                     {% endfor %}</td>
-                                    
                                 </table>
                             </td>
                         </tr>
                     </table>
                 </div>
-
+                {% endfor %}
             </div>
         </div>
 

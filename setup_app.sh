@@ -8,6 +8,6 @@ scp static/img/USF_LOGO.jpg macdevro:flaskapp/static/img/USF_LOGO.jpg
 scp static/img/usf-logo-scaled.png macdevro:flaskapp/static/img/usf-logo-scaled.png
 scp static/calls.html macdevro:flaskapp/static/calls.html
 scp static/login.html macdevro:flaskapp/static/login.html
-scp templates/calls.html macdevro:flaskapp/static/calls.html
-scp templates/play.html macdevro:flaskapp/static/play.html
+scp templates/calls.html macdevro:flaskapp/templates/calls.html
+scp templates/play.html macdevro:flaskapp/templates/play.html
 scp templates/welcome.html macdevro:flaskapp/templates/welcome.html

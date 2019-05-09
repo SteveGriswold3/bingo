@@ -69,9 +69,15 @@
                             var table_cards = document.getElementById('tblCards');
                             row = table_cards.insertRow(table_cards.rows.length);
                             row.insertCell(0).innerHTML = '<input type="checkbox"/>';
-                            row.insertCell(1).innerText = new_code;
+
+                            var code_link = '<a onclick="change_card_numbers(this)">'.concat(new_code)
+                            code_link = code_link.concat('</a>')
+                            row.insertCell(1).innerHTML = code_link;
                             row.insertCell(2).innerText = results.card_count;
                             row.insertCell(3).innerText = 'Available';
+                            $('#addModal').modal('show');
+                            document.getElementById('randomize_card_id').value=new_code;
+                            random_card();
                         } else {
                             sender.classList.add('btn-danger');
                             sender.classList.remove('btn-info');
@@ -80,6 +86,124 @@
                     })    
             }                  
         }
+
+        function remove_prior_numbers(bingo_table){
+            while (bingo_table.rows.length>1){
+                bingo_table.deleteRow(1);
+            }
+        }
+
+        function random_card(){
+            var key = document.getElementById('temp_key').value
+            var code = document.getElementById('randomize_card_id').value;
+
+            var bingo_table =  document.getElementById("generated_card_numbers");
+            remove_prior_numbers(bingo_table)
+
+            jqry='/'.concat(key)
+                jqry=jqry.concat('/')
+                jqry=jqry.concat(code)
+                jqry=jqry.concat('/random_card.json')
+
+            var jsonData = $.ajax({
+                url: jqry,
+                dataType: 'json',
+                }).done(function (results) {
+                    
+                    var cell_count = 0;
+                    var row = bingo_table.insertRow(bingo_table.rows.length);
+                    var nbr_button = "";
+
+                    for (i in results.card){
+                        for (bingo_nbr in results.card[i]){
+                            nbr_button = "<button class='button'>".concat(results.card[i][bingo_nbr]);
+                            nbr_button = nbr_button.concat("</button>");
+
+                            row.insertCell(cell_count).innerHTML = nbr_button
+                            cell_count = cell_count+1;
+                            if (cell_count==5){
+                                cell_count = 0;
+                                row = bingo_table.insertRow(bingo_table.rows.length);
+                            }
+                        }
+
+                    }
+                });
+        }
+
+        function change_card_numbers(sender) {
+            var key = document.getElementById('temp_key').value
+            var code = sender.innerText;
+            var bingo_table =  document.getElementById("generated_card_numbers");
+            remove_prior_numbers(bingo_table)
+            
+            $('#addModal').modal('show');
+            document.getElementById('randomize_card_id').value=code;
+
+            jqry='/'.concat(key);
+            jqry=jqry.concat('/');
+            jqry=jqry.concat(code);
+            jqry=jqry.concat('/get_numbers.json');
+
+            var jsonData = $.ajax({
+                url: jqry,
+                dataType: 'json',
+                }).done(function (results) {
+                    
+                    var cell_count = 0;
+                    var row = bingo_table.insertRow(bingo_table.rows.length);
+                    var nbr_button = "";
+
+                    for (i in results.card){
+                        for (bingo_nbr in results.card[i]){
+                            nbr_button = "<button class='button'>".concat(results.card[i][bingo_nbr]);
+                            nbr_button = nbr_button.concat("</button>");
+
+                            row.insertCell(cell_count).innerHTML = nbr_button
+                            cell_count = cell_count+1;
+                            if (cell_count==5){
+                                cell_count = 0;
+                                row = bingo_table.insertRow(bingo_table.rows.length);
+                            }
+                        }
+
+                    }
+                });
+        }
+        var play_codes =[];
+
+        function update_play_list(sender, card_id){
+            if (play_codes.includes(card_id)) {
+                play_codes.pop(card_id);
+                sender.checked=false;
+            }
+            else {
+                play_codes.push(card_id);
+                sender.checked=true;
+            }
+            alert(sender.checked)
+        }
+
+        function play_bingo(){
+            var table_cards = document.getElementById('tblCards');
+            var n = 1;
+            while (n < table_cards.rows.length){
+                var chk_id = 'selected'.concat(n);
+                if (document.getElementById(chk_id).checked){
+                    var code_row = 'code_id'.concat(n);
+                    var card_id = document.getElementById(code_row).innerText
+                    if (!play_codes.includes(card_id)) {
+                        play_codes.push(card_id)
+                    }
+                }
+                n+=1;
+            }
+            var frm = document.getElementById('play_list');
+            var contents = document.getElementById('play_list_values');
+            contents.value = play_codes;
+            frm.submit();
+        }
+
     </script>
 
     <body>
@@ -106,12 +230,7 @@
             <div class="row"><hr></div>
             <!-- Player Settings-->
             <h4>Player Options:</h4>
-            <div class="row">
-                <form action="/update_nickname" method='POST' id='player'>
-                    <input type="hidden" id='temp_key' value='{{temp_key}}'/>
-                    <input type="hidden" value='{{player_cards}}'/>
-                </form >
-                
+            <div class="row">                
                 <div class="col-sm-2 center"></div>
                 <div class="col-sm-2 center">
                     <h5>Player Name:</h5> 
@@ -148,13 +267,17 @@
             <h4>Your Bingo Cards</h4>
             <div class="row">
                 <div class="col-sm-1"></div>
+                <div class="col-sm-4"></div>
                 <div class="col-sm-4">
-                    Only 4 Cards per Game
-                </div>
-                <div class="col-sm-4">
-                    <a class="btn btn-primary" href="/play">Play Game With Selected Cards.</a>
+                    <a class="btn btn-primary" onclick="play_bingo()">Play Game With Selected Cards.</a>
                 </div>
             </div>
+            <form action="/play" id='play_list' method="POST" >
+                <input type="hidden" name='play_list_values' id='play_list_values'/>
+                <input type="hidden" name='temp_key' id='temp_key' value='{{temp_key}}'/>
+                <input type="hidden" text='{{player_cards}}'/>
+
+            </form>
             <div class="row">
                 <div class="col-sm-1"></div>
                 <div class="col-sm-6">
@@ -167,8 +290,8 @@
                         </thead>
                         {% for player_card in player_cards %}
                         <tr>
-                            <td><input type="checkbox"/></td>
-                            <td>{{player_card.card_code}}</td>
+                            <td><input type="checkbox" id='selected{{player_card.nbr}}' onclick="update_play_list(this, '{{player_card.card_code}}')"/></td>
+                            <td><a id='code_id{{player_card.nbr}}' onclick="change_card_numbers(this)">{{player_card.card_code}}</a></td>
                             <td>{{player_card.nbr}}</td>
                             <td>{% if player_card.used == True %} Available {% else %} Used {% endif %}</td>                        
                         </tr>
@@ -177,6 +300,45 @@
                 </div>
             </div>
         </div>
+
+        <!--Random Card Modal-->
+        <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Like your Numbers?</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <input type="hidden" id="randomize_card_id"/>
+                <div class="modal-body">
+                    <table class="table-bordered">
+                        <tr>
+                            <td>
+                                <table id="generated_card_numbers">
+                                    <thead align="center">
+                                        <td><h4>B</h4></td>
+                                        <td><h4>I</h4></td>
+                                        <td><h4>N</h4></td>
+                                        <td><h4>G</h4></td>
+                                        <td><h4>O</h4></td>
+                                    </thead>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" onclick="random_card()">Randomize</button>
+                    <a class="btn btn-primary" data-dismiss="modal">Save</a>
+                </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            
+        </script>
     </body>
     <footer class="sticky-footer">
     <div class="container my-auto">
