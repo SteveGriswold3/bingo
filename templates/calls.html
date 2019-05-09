@@ -73,6 +73,17 @@
         }
     }
 
+    // range variable
+    var range = function(start, end) {
+                        var range = [];
+                        var n = start;
+                        while (n < end ) {
+                            range.push(n)
+                            n=n+1;
+                        }
+                        return range;
+                    }
+
     function reset_calls() {
         var jsonData = $.ajax({
             url: '/reset_calls.json',
@@ -81,16 +92,8 @@
                 if (results.reset == 'successful') {
                     document.getElementById('Calls').innerText = "";
                     // reset buttons
-                    var range = function(end) {
-                        var range = [];
-                        var n = 0;
-                        while (n < end ) {
-                            n=n+1;
-                            range.push(n)
-                        }
-                        return range;
-                    }
-                    numbers = range(75);
+                    
+                    numbers = range(1,76);
                     for (x in numbers) {
                         var call_btn = document.getElementById('btn'.concat(numbers[x]));
                         if( call_btn.classList.contains("button-selected") ){
@@ -107,6 +110,44 @@
             });
     }
 
+    function save_pattern() {
+        win_chk = [];
+        for (r in range(0,5)) {
+            row_chk = [];
+            for (i in range(0,5)) {
+                loc_id = r.toString()+i.toString();
+                var loc = document.getElementById(loc_id);
+                if (loc.classList.contains("button-selected")) {
+                    row_chk.push(1);
+                } else {
+                    row_chk.push(0);
+                }
+            }
+            win_chk[r] = (row_chk);
+        }
+        alert(win_chk);
+        /*--var patten_input = document.getElementById('new_pattern');
+        patten_input.value = win_chk;
+        document.getElementById('add_pattern').submit();--*/
+        $.ajax({
+            type: "POST",
+            url: "/add_pattern",
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify(win_chk),
+            success: function(response) {
+                console.log(response);
+            }
+        });
+    }
+
+    function clear_all_pattern() {
+        $.ajax({
+            url: "/clear_patterns",
+            success: function(response) {
+                console.log(response);
+            }
+        });
+    }
     setInterval(function() {
         /*-- Get Called Bingos --*/
         /*--var jsonData = $.ajax({
@@ -198,6 +239,10 @@
                 </div>
 
                 <div class="col-md-6">
+                    <form action="/add_pattern" id='add_pattern' method="POST" >
+                        <input type="hidden" name='pattern' id='new_pattern'/>
+                    </form>
+
                     <!--Split Columns 1-->
                     <div class="col-md-6">
                         <h3>Add Patterns</h3>
@@ -222,7 +267,16 @@
                             </table>
                         </div>
                         <div>
-                            <button class="button" onclick="">Save Pattern</button>
+                            <button class="button" onclick="save_pattern()">Save Pattern</button>
+                        </div>
+                    </div>
+                    <div class="row"></div>
+                    <span></span>
+                    <div class="row">
+
+                        <span>Clear All Patterns removes all winning possibilities.  Use New Game to add default patterns back.</span>
+                        <div>
+                            <button class="button" onclick="clear_all_pattern()">Clear All Patterns</button>
                         </div>
                     </div>
                 </div>

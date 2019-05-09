@@ -4,6 +4,11 @@ import numpy as np
 from datetime import datetime
 from pymongo import MongoClient
 from string import ascii_lowercase as letters
+import pickle
+
+def get_winning_patterns():
+    with open('patterns.pkl', 'rb') as pat:
+        return pickle.load(pat)
 
 def bingo_range(start):
     """Create bingo range for each starting point.
@@ -74,6 +79,7 @@ class bingoDB:
         self.db = self.con['bingo']
         self.players = self.db.players
         self.cards = self.db.card_ids
+        self.winner_patterns = get_winning_patterns()
     
     def generateCardCode(self, times=100, code_len=6):
         code_list = []
@@ -214,3 +220,12 @@ class bingoDB:
             {'user_id': True}
         )
         return res['user_id']
+    
+    def add_winning_pattern(self, new_pattern):
+        self.winner_patterns.append(new_pattern)
+    
+    def reset_winning_patterns(self):
+        self.winner_patterns = get_winning_patterns()
+    
+    def clear_winning_patterns(self):
+        self.winner_patterns = []

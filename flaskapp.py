@@ -1,8 +1,6 @@
 """
 TODO: Login for Calls.
-TODO: New Game
-TODO: Winning Patterns
-TODO: Additional Patterns
+TODO: Call Bingo.
 """
 from flask import Flask, request, render_template, url_for
 from src.bingo import Card, bingoDB
@@ -112,8 +110,21 @@ def update_calls():
 def reset_calls():
     while len(calls)>0:
         calls.pop()
+    db.reset_winning_patterns()
     return json.dumps({'reset': 'successful'})
-    
+
+@app.route('/add_pattern', methods=['POST'])
+def add_pattern():
+    # new_pattern = json.loads(request.data)
+    new_pattern = request.get_json()
+    db.add_winning_pattern(new_pattern)
+    return 'successful'
+
+@app.route('/clear_patterns')
+def clear_patterns():
+    db.clear_winning_patterns()
+    return 'successful'
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
     #app.run(host='0.0.0.0')
